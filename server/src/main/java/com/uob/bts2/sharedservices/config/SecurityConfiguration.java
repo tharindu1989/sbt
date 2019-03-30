@@ -13,8 +13,34 @@ import java.util.Arrays;
 
 //@EnableGlobalMethodSecurity
 @Configuration
-public class SecurityConfiguration{
+public class SecurityConfiguration extends WebSecurityConfigurerAdapter{
 
+@Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+                .authorizeRequests()
+                .anyRequest().fullyAuthenticated()
+                .and()
+                .formLogin();
+    }
+
+
+    @Override
+    public void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth
+                .ldapAuthentication()
+                .userDnPatterns("uid={0},ou=people")
+                .groupSearchBase("ou=groups")
+                .contextSource(contextSource())
+                .passwordCompare()
+                .passwordEncoder(new LdapShaPasswordEncoder())
+                .passwordAttribute("userPassword");
+    }
+
+    @Bean
+    public DefaultSpringSecurityContextSource contextSource() {
+        return new DefaultSpringSecurityContextSource(Arrays.asList("ldap://localhost:8389/"), "dc=springframework,dc=org");
+    }
     
 }
 
